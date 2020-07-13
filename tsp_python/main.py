@@ -33,7 +33,7 @@ def main():
     population = spawn_population(10)
     for area in population:
         print(area.get_city_labels())
-    ITERATIONS = 10
+    ITERATIONS = 5
     for i in range(ITERATIONS):
         print(f"Generation {i}")
         print(population[0])

@@ -33,7 +33,7 @@ def initialize_areas(num_areas, num_cities_per_area, x_y_grid_size=10):
 
 
 def spawn_population(num_areas):
-    return initialize_areas(num_areas, 20)
+    return initialize_areas(num_areas, 10)
 
 
 def get_best_area(population):
