@@ -1,30 +1,9 @@
 import math
-import numpy
 import random
 
-from selection import get_parent
+from selection import get_parent, get_offspring
+from classes import Area, City
 
-class City:
-    def __init__(self, x, y, label):
-        self.id = label
-        self.loc = numpy.array((x, y))
-
-    def distance_to(self, city):
-        return numpy.linalg.norm(city.loc - self.loc)
-
-    def __str__(self):
-        return f"{self.id}: ({self.loc})"
-
-class Area:
-    def __init__(self, cities):
-        self.cities = cities
-
-    def get_fitness(self):
-        fitness = 0.0
-        for i in range(len(self.cities) - 1):
-            fitness += self.cities[i].distance_to(self.cities[i+1])
-        return fitness
-        
 
 def argmax(population):
     score = math.inf
@@ -36,30 +15,59 @@ def argmax(population):
             score = current
     return best
 
-def initialize_areas(num, size=10):
-    cities = list()
-    for i, _ in enumerate(range(num)):
-        x = random.uniform(0, size)
-        y = random.uniform(0, size)
-        cities.append(City(x, y, i))
-    random.shuffle(cities)
-    area = Area(cities)
-    return area
 
-def spawn_population(num):
-    return [initialize_areas(10) for _ in range(num)]
+def initialize_areas(num_areas, num_cities_per_area, x_y_grid_size=10):
+    """Returns array of Area objects"""
+    areas = list()
+    cities = list()
+
+    for i, _ in enumerate(range(num_cities_per_area)):
+        x = random.uniform(0, x_y_grid_size)
+        y = random.uniform(0, x_y_grid_size)
+        cities.append(City(x, y, i))
+
+    for _ in range(num_areas):
+        random.shuffle(cities)
+        areas.append(Area(cities.copy()))
+    return areas
+
+
+def spawn_population(num_areas):
+    return initialize_areas(num_areas, 20)
+
 
 def get_best_area(population):
-    #area = argmax(population)
-    area = get_parent(population)
-    return area
+    return argmax(population)
+
 
 def evolve(population):
-    offsprint = list()
-    # Get parents
-    p1 = get_parent(population)
-    p2 = get_parent(population)
-    while p1 == p2:
-        p2 = get_parent(population)
-    # Crossover
-    # Mutate
+    offspring = list()
+    # array of fitness values mapping to cities
+    fitness_values = [area.get_fitness() for area in population]
+    # inverse of fitness value array
+    inverse_fitness_values = [
+        sum(fitness_values) / value for value in fitness_values
+    ]
+    # normalize
+    normalized_fitness_values = [
+        value / sum(inverse_fitness_values) for value in inverse_fitness_values
+    ]
+    while len(offspring) < len(population):
+        # Get parents
+        p1 = get_parent(population, normalized_fitness_values)
+        p2 = get_parent(population, normalized_fitness_values)
+        while p1 == p2:
+            p2 = get_parent(population, normalized_fitness_values)
+        # Crossover
+        offspringA, offspringB = get_offspring(p1, p2)
+        assert len(offspringA.cities) == 10
+        assert len(offspringB.cities) == 10
+
+        offspring.append(offspringA)
+        offspring.append(offspringB)
+        # Mutate
+
+    population.extend(offspring)
+    population.sort(key=lambda x: x.get_fitness())
+    new_population = population[: int(len(population) / 2)]
+    return new_population
