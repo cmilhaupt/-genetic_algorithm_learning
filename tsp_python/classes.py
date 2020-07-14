@@ -30,4 +30,4 @@ class Area:
         return len(self.cities)
 
     def __str__(self):
-        return f"Area: len(cities)={len(self.cities)}, fitness={self.get_fitness()}"
+        return f"Area: len(cities)={len(self.cities)}, fitness={self.get_fitness()}, labels={self.get_city_labels()}"

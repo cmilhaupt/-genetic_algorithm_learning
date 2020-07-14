@@ -33,7 +33,7 @@ def initialize_areas(num_areas, num_cities_per_area, x_y_grid_size=10):
 
 
 def spawn_population(num_areas):
-    return initialize_areas(num_areas, 10)
+    return initialize_areas(num_areas, 20)
 
 
 def get_best_area(population):
@@ -45,9 +45,7 @@ def evolve(population):
     # array of fitness values mapping to cities
     fitness_values = [area.get_fitness() for area in population]
     # inverse of fitness value array
-    inverse_fitness_values = [
-        sum(fitness_values) / value for value in fitness_values
-    ]
+    inverse_fitness_values = [sum(fitness_values) / value for value in fitness_values]
     # normalize
     normalized_fitness_values = [
         value / sum(inverse_fitness_values) for value in inverse_fitness_values
@@ -56,18 +54,42 @@ def evolve(population):
         # Get parents
         p1 = get_parent(population, normalized_fitness_values)
         p2 = get_parent(population, normalized_fitness_values)
-        while p1 == p2:
+        # print(f"-- Debug: parent1= {' '.join(p1.get_city_labels())}")
+        while p1.get_city_labels() == p2.get_city_labels():
             p2 = get_parent(population, normalized_fitness_values)
+        # print(f"-- Debug: parent2= {' '.join(p2.get_city_labels())}")
+
         # Crossover
         offspringA, offspringB = get_offspring(p1, p2)
-        assert len(offspringA.cities) == 10
-        assert len(offspringB.cities) == 10
+        # print(f"-- Debug: offspringA= {' '.join(offspringA.get_city_labels())}")
+        # print(f"-- Debug: offspringB= {' '.join(offspringB.get_city_labels())}")
+        if good_offspring(offspringA, population) and good_offspring(
+            offspringB, population
+        ):
+            offspring.append(offspringA)
+            offspring.append(offspringB)
 
-        offspring.append(offspringA)
-        offspring.append(offspringB)
         # Mutate
 
     population.extend(offspring)
+    #print(f"-- Debug: {len(population)}")
+    #print("----------- PRE SORT ------------")
+    #for area in population:
+    #    print(f"-- -- Debug: {area}")
     population.sort(key=lambda x: x.get_fitness())
+    #print("----------- POST SORT -----------")
+    #for area in population:
+    #    print(f"-- -- Debug: {area}")
     new_population = population[: int(len(population) / 2)]
+    #print("----------- NEW POP  -----------")
+    #for area in new_population:
+    #    print(f"-- -- Debug: {area}")
     return new_population
+
+
+def good_offspring(offspring, population):
+    good = True
+    for area in population:
+        if area.get_city_labels() == offspring.get_city_labels():
+            good = False
+    return good
